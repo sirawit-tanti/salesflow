@@ -3,6 +3,8 @@ import { AppLayout } from "../components/layout/AppLayout";
 import { GuestRoute } from "../components/layout/GuestRoute";
 import { ProtectedRoute } from "../components/layout/ProtectedRoute";
 import { LoginPage } from "../features/auth/LoginPage";
+import { CustomerFormPage } from "../features/customers/CustomerFormPage";
+import { CustomerListPage } from "../features/customers/CustomerListPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 
 export const router = createBrowserRouter([
@@ -28,6 +30,18 @@ export const router = createBrowserRouter([
           {
             path: "/dashboard",
             element: <DashboardPage />,
+          },
+          {
+            path: '/customers',
+            element: <CustomerListPage />,
+          },
+          {
+            path: '/customers/create',
+            element: <CustomerFormPage />,
+          },
+          {
+            path: '/customers/:customerId/edit',
+            element: <CustomerFormPage />,
           },
         ],
       },

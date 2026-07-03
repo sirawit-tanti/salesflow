@@ -1,17 +1,22 @@
-import { Link } from "react-router";
+import { NavLink } from "react-router";
 import { useAuth } from "../../features/auth/AuthContext";
 import type { RoleName } from "../../features/auth/authType";
 
 interface NavItem {
   label: string;
   to: string;
-  roles?: RoleName;
+  roles?: RoleName[];
 }
 
 const navItems: NavItem[] = [
   {
     label: "Dashboard",
     to: "/dashboard",
+  },
+  {
+    label: 'Customers',
+    to: '/customers',
+    roles: ['ADMIN', 'SALES', 'ACCOUNTANT', 'MANAGER'],
   },
 ];
 
@@ -43,13 +48,13 @@ export function Sidebar() {
 
       <nav className="space-y-1 px-3 py-4">
         {visibleNavItems.map((item) => (
-          <Link
+          <NavLink
             key={item.to}
             to={item.to}
             className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
           >
             {item.label}
-          </Link>
+          </NavLink>
         ))}
       </nav>
 
