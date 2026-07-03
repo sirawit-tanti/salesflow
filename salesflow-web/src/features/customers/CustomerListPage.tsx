@@ -51,7 +51,7 @@ export function CustomerListPage() {
             `Delete customer ${customer.customer_code} - ${customer.name}?`,
         );
 
-        if (!confirm) {
+        if (!confirmed) {
             return;
         }
 
