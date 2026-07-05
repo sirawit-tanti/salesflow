@@ -6,6 +6,8 @@ import { LoginPage } from "../features/auth/LoginPage";
 import { CustomerFormPage } from "../features/customers/CustomerFormPage";
 import { CustomerListPage } from "../features/customers/CustomerListPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
+import { ProductFormPage } from "../features/products/ProductFormPage";
+import { ProductListPage } from "../features/products/ProductListPage";
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +44,18 @@ export const router = createBrowserRouter([
           {
             path: '/customers/:customerId/edit',
             element: <CustomerFormPage />,
+          },
+          {
+            path: '/products',
+            element: <ProductListPage />,
+          },
+          {
+            path: '/products/create',
+            element: <ProductFormPage />,
+          },
+          {
+            path: '/products/:productId/edit',
+            element: <ProductFormPage />,
           },
         ],
       },

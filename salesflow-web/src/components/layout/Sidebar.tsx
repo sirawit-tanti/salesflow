@@ -18,6 +18,11 @@ const navItems: NavItem[] = [
     to: '/customers',
     roles: ['ADMIN', 'SALES', 'ACCOUNTANT', 'MANAGER'],
   },
+  {
+    label: 'Products',
+    to: '/products',
+    roles: ['ADMIN', 'SALES', 'ACCOUNTANT', 'MANAGER'],
+  },
 ];
 
 export function Sidebar() {
