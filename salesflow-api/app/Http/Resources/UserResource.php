@@ -21,8 +21,8 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'is_active' => $this->is_active,
-            'created_at' => $this->created_at?->toISOString(),
-            'updated_at' => $this->updated_at?->toISOString(),
+            'created_at' => $this->created_at?->timezone('Asia/Bangkok')->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at?->timezone('Asia/Bangkok')->format('Y-m-d H:i:s'),
         ];
     }
 }
