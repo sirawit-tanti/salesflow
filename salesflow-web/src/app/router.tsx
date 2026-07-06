@@ -8,6 +8,9 @@ import { CustomerListPage } from "../features/customers/CustomerListPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { ProductFormPage } from "../features/products/ProductFormPage";
 import { ProductListPage } from "../features/products/ProductListPage";
+import { QuotationDetailPage } from "../features/quotations/QuotationDetailPage";
+import { QuotationFormPage } from "../features/quotations/QuotationFormPage";
+import { QuotationListPage } from "../features/quotations/QuotationListPage";
 
 export const router = createBrowserRouter([
   {
@@ -34,28 +37,44 @@ export const router = createBrowserRouter([
             element: <DashboardPage />,
           },
           {
-            path: '/customers',
+            path: "/customers",
             element: <CustomerListPage />,
           },
           {
-            path: '/customers/create',
+            path: "/customers/create",
             element: <CustomerFormPage />,
           },
           {
-            path: '/customers/:customerId/edit',
+            path: "/customers/:customerId/edit",
             element: <CustomerFormPage />,
           },
           {
-            path: '/products',
+            path: "/products",
             element: <ProductListPage />,
           },
           {
-            path: '/products/create',
+            path: "/products/create",
             element: <ProductFormPage />,
           },
           {
-            path: '/products/:productId/edit',
+            path: "/products/:productId/edit",
             element: <ProductFormPage />,
+          },
+          {
+            path: "/quotations",
+            element: <QuotationListPage />,
+          },
+          {
+            path: "/quotations/create",
+            element: <QuotationFormPage />,
+          },
+          {
+            path: "/quotations/:quotationId",
+            element: <QuotationDetailPage />,
+          },
+          {
+            path: "/quotations/:quotationId/edit",
+            element: <QuotationFormPage />,
           },
         ],
       },

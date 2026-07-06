@@ -14,14 +14,19 @@ const navItems: NavItem[] = [
     to: "/dashboard",
   },
   {
-    label: 'Customers',
-    to: '/customers',
-    roles: ['ADMIN', 'SALES', 'ACCOUNTANT', 'MANAGER'],
+    label: "Customers",
+    to: "/customers",
+    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
   },
   {
-    label: 'Products',
-    to: '/products',
-    roles: ['ADMIN', 'SALES', 'ACCOUNTANT', 'MANAGER'],
+    label: "Products",
+    to: "/products",
+    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
+  },
+  {
+    label: "Quotations",
+    to: "/quotations",
+    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
   },
 ];
 
