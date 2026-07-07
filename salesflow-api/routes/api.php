@@ -21,5 +21,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('customers', CustomerController::class);
     Route::apiResource('products', ProductController::class);
+
+    Route::post('/quotations/{quotation}/send', [QuotationController::class, 'send']);
+    Route::post('/quotations/{quotation}/accept', [QuotationController::class, 'accept']);
+    Route::post('/quotations/{quotation}/reject', [QuotationController::class, 'reject']);
+
     Route::apiResource('quotations', QuotationController::class);
 });

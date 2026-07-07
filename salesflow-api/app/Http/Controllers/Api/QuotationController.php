@@ -161,7 +161,7 @@ class QuotationController extends Controller
         ]);
     }
 
-    public function destroy(Quotation $quotation): JsonResponse
+    public function destroy(Request $request, Quotation $quotation): JsonResponse
     {
         if ($quotation->status !== Quotation::STATUS_DRAFT) {
             return response()->json([
@@ -169,10 +169,100 @@ class QuotationController extends Controller
             ], 422);
         }
 
+        $quotation->update([
+            'updated_by' => $request->user()->id,
+        ]);
+
         $quotation->delete();
 
         return response()->json([
             'message' => 'Quotation deleted successfully.',
+        ]);
+    }
+
+    public function send(Quotation $quotation): JsonResponse
+    {
+        if ($quotation->status !== Quotation::STATUS_DRAFT) {
+            return response()->json([
+                'message' => 'Only draft quotations can be sent.',
+            ], 422);
+        }
+
+        if ($quotation->items()->count() === 0) {
+            return response()->json([
+                'message' => 'Quotation must have at least one item before sending.',
+            ], 422);
+        }
+
+        $quotation->update([
+            'status' => Quotation::STATUS_SENT,
+            'sent_at' => now(),
+            'updated_by' => request()->user()->id,
+        ]);
+
+        return response()->json([
+            'message' => 'Quotation sent successfully.',
+            'quotation' => new QuotationResource(
+                $quotation->fresh()->load([
+                    'customer',
+                    'items.product',
+                    'creator:id,name',
+                    'updater:id,name',
+                ])
+            ),
+        ]);
+    }
+
+    public function accept(Quotation $quotation): JsonResponse
+    {
+        if ($quotation->status !== Quotation::STATUS_SENT) {
+            return response()->json([
+                'message' => 'Only sent quotations can be accepted.',
+            ], 422);
+        }
+
+        $quotation->update([
+            'status' => Quotation::STATUS_ACCEPTED,
+            'accepted_at' => now(),
+            'updated_by' => request()->user()->id,
+        ]);
+
+        return response()->json([
+            'message' => 'Quotation accepted successfully.',
+            'quotation' => new QuotationResource(
+                $quotation->fresh()->load([
+                    'customer',
+                    'items.product',
+                    'creator:id,name',
+                    'updater:id,name',
+                ])
+            ),
+        ]);
+    }
+
+    public function reject(Quotation $quotation): JsonResponse
+    {
+        if ($quotation->status !== Quotation::STATUS_SENT) {
+            return response()->json([
+                'message' => 'Only sent quotations can be rejected.',
+            ], 422);
+        }
+
+        $quotation->update([
+            'status' => Quotation::STATUS_REJECTED,
+            'updated_by' => request()->user()->id,
+        ]);
+
+        return response()->json([
+            'message' => 'Quotation rejected successfully.',
+            'quotation' => new QuotationResource(
+                $quotation->fresh()->load([
+                    'customer',
+                    'items.product',
+                    'creator:id,name',
+                    'updater:id,name',
+                ])
+            ),
         ]);
     }
 
