@@ -390,14 +390,25 @@ export function InvoiceDetailPage() {
                         </td>
 
                         <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                          <button
-                            type="button"
-                            onClick={() => void handleDeletePayment(payment)}
-                            disabled={isActionLoading}
-                            className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
-                          >
-                            Delete
-                          </button>
+                          <div className="flex justify-end gap-2">
+                            {payment.receipt && (
+                              <Link
+                                to={`/receipts/${payment.receipt.id}`}
+                                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                              >
+                                Receipt
+                              </Link>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => void handleDeletePayment(payment)}
+                              disabled={isActionLoading}
+                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))

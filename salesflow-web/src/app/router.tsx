@@ -13,6 +13,8 @@ import { QuotationFormPage } from "../features/quotations/QuotationFormPage";
 import { QuotationListPage } from "../features/quotations/QuotationListPage";
 import { InvoiceDetailPage } from "../features/invoices/InvoiceDetailPage";
 import { InvoiceListPage } from "../features/invoices/InvoiceListPage";
+import { ReceiptDetailPage } from "../features/receipts/ReceiptDetailPage";
+import { ReceiptListPage } from "../features/receipts/ReceiptListPage";
 
 export const router = createBrowserRouter([
   {
@@ -85,6 +87,14 @@ export const router = createBrowserRouter([
           {
             path: "/invoices/:invoiceId",
             element: <InvoiceDetailPage />,
+          },
+          {
+            path: "/receipts",
+            element: <ReceiptListPage />,
+          },
+          {
+            path: "/receipts/:receiptId",
+            element: <ReceiptDetailPage />,
           },
         ],
       },

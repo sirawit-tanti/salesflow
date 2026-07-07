@@ -26,6 +26,7 @@ export interface Payment {
   payment_date: string;
   amount: string;
   payment_method: PaymentMethod;
+  receipt?: PaymentReceipt;
   reference_no: string | null;
   notes: string | null;
   created_by?: PaymentUser;
@@ -45,10 +46,16 @@ export interface PaymentPayload {
 export interface PaymentResponse {
   message?: string;
   payment: Payment;
+  receipt?: PaymentReceipt;
   invoice: Invoice;
 }
 
 export interface PaymentDeleteResponse {
   message?: string;
   invoice: Invoice;
+}
+
+export interface PaymentReceipt {
+  id: number;
+  receipt_no: string;
 }
