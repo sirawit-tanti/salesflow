@@ -5,78 +5,74 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Quotation extends Model
+class Invoice extends Model
 {
     use SoftDeletes;
-    
-    public const STATUS_DRAFT = 'DRAFT';
-    public const STATUS_SENT = 'SENT';
-    public const STATUS_ACCEPTED = 'ACCEPTED';
-    public const STATUS_REJECTED = 'REJECTED';
-    public const STATUS_EXPIRED = 'EXPIRED';
-    public const STATUS_CONVERTED = 'CONVERTED';
+
+    public const STATUS_UNPAID = 'UNPAID';
+    public const STATUS_PARTIALLY_PAID = 'PARTIALLY_PAID';
+    public const STATUS_PAID = 'PAID';
+    public const STATUS_OVERDUE = 'OVERDUE';
+    public const STATUS_CANCELLED = 'CANCELLED';
 
     protected $fillable = [
-        'quotation_no',
+        'invoice_no',
+        'quotation_id',
         'customer_id',
         'status',
         'issue_date',
-        'expiry_date',
+        'due_date',
         'sub_total',
         'discount_amount',
         'tax_rate',
         'tax_amount',
         'total_amount',
+        'paid_amount',
+        'balance_due',
         'notes',
-        'terms',
         'created_by',
         'updated_by',
-        'sent_at',
-        'accepted_at',
-        'converted_at',
     ];
 
     protected function casts(): array
     {
         return [
             'issue_date' => 'date',
-            'expiry_date' => 'date',
+            'due_date' => 'date',
             'sub_total' => 'decimal:2',
             'discount_amount' => 'decimal:2',
             'tax_rate' => 'decimal:2',
             'tax_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
-            'sent_at' => 'datetime',
-            'accepted_at' => 'datetime',
-            'converted_at' => 'datetime',
+            'paid_amount' => 'decimal:2',
+            'balance_due' => 'decimal:2',
         ];
     }
-    
+
+    public function quotation(): BelongsTo
+    {
+        return $this->belongsTo(Quotation::class);
+    }
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
-    
+
     public function items(): HasMany
     {
-        return $this->hasMany(QuotationItem::class);
+        return $this->hasMany(InvoiceItem::class);
     }
-    
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
-    
+
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
-    }
-    
-    public function invoice(): HasOne
-    {
-        return $this->hasOne(Invoice::class);
     }
 }

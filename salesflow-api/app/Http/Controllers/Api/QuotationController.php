@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Quotations\StoreQuotationRequest;
 use App\Http\Requests\Quotations\UpdateQuotationRequest;
+use App\Http\Resources\InvoiceResource;
 use App\Http\Resources\QuotationResource;
+use App\Models\Invoice;
 use App\Models\Quotation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -266,6 +268,79 @@ class QuotationController extends Controller
         ]);
     }
 
+    public function convertToInvoice(Request $request, Quotation $quotation): JsonResponse
+    {
+        if ($quotation->status !== Quotation::STATUS_ACCEPTED) {
+            return response()->json([
+                'message' => 'Only accepted quotations can be converted to invoice.'
+            ], 422);
+        }
+
+        if ($quotation->invoice()->exists()) {
+            return response()->json([
+                'message' => 'This quotation has already been converted to an invoice.'
+            ], 422);
+        }
+
+        $invoice = DB::transaction(function () use ($request, $quotation) {
+            $quotation->load(['items']);
+
+            $invoice = Invoice::create([
+                'invoice_no' => $this->generateInvoiceNo(),
+                'quotation_id' => $quotation->id,
+                'customer_id' => $quotation->customer_id,
+                'status' => Invoice::STATUS_UNPAID,
+                'issue_date' => now()->toDateString(),
+                'due_date' => now()->toDateString(),
+                'sub_total' => $quotation->sub_total,
+                'discount_amount' => $quotation->discount_amount,
+                'tax_rate' => $quotation->tax_rate,
+                'tax_amount' => $quotation->tax_amount,
+                'total_amount' => $quotation->total_amount,
+                'paid_amount' => 0,
+                'balance_due' => $quotation->total_amount,
+                'notes' => $quotation->notes,
+                'created_by' => $request->user()->id,
+                'updated_by' => $request->user()->id,
+            ]);
+
+            foreach ($quotation->items as $quotationItem) {
+                $invoice->items()->create([
+                    'product_id' => $quotationItem->product_id,
+                    'item_name' => $quotationItem->item_name,
+                    'description' => $quotationItem->description,
+                    'quantity' => $quotationItem->quantity,
+                    'unit' => $quotationItem->unit,
+                    'unit_price' => $quotationItem->unit_price,
+                    'discount_amount' => $quotationItem->discount_amount,
+                    'tax_amount' => $quotationItem->tax_amount,
+                    'line_total' => $quotationItem->line_total,
+                ]);
+            }
+
+            $quotation->update([
+                'status' => Quotation::STATUS_CONVERTED,
+                'converted_at' => now(),
+                'updated_by' => $request->user()->id,
+            ]);
+
+            return $invoice;
+        });
+
+        return response()->json([
+            'message' => 'Quotation converted to invoice successfully.',
+            'invoice' => new InvoiceResource(
+                $invoice->load([
+                    'customer',
+                    'quotation',
+                    'items.product',
+                    'creator:id,name',
+                    'updater:id,name'
+                ])
+            ),
+        ], 201);
+    }
+
     private function calculateTotals(array $items, float $documentDiscountAmount, float $taxRate): array
     {
         $calculatedItems = [];
@@ -337,5 +412,25 @@ class QuotationController extends Controller
         );
 
         return $quotationNo;
+    }
+
+    private function generateInvoiceNo(): string
+    {
+        $year = now()->format('Y');
+
+        $nextNumber = Invoice::withTrashed()
+            ->where('invoice_no', 'like', "INV-{$year}-%")
+            ->count() + 1;
+
+        do {
+            $invoiceNo = 'INV-'.$year.'-'.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+            $nextNumber++;
+        } while (
+            Invoice::withTrashed()
+                ->where('invoice_no', $invoiceNo)
+                ->exists()
+        );
+
+        return $invoiceNo;
     }
 }
