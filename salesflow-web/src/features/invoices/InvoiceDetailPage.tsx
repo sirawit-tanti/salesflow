@@ -4,8 +4,11 @@ import { Link, useParams } from "react-router";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { formatDate } from "../../lib/formatDate";
 import { formatStatus } from "../../lib/formatStatus";
+import { RecordPaymentModal } from "../payments/RecordPaymentModal";
+import { deletePaymentApi } from "../payments/paymentApi";
 import { getInvoiceApi } from "./invoiceApi";
 import type { Invoice, InvoiceStatus } from "./invoiceTypes";
+import type { Payment } from "../payments/paymentTypes";
 
 function getStatusClass(status: InvoiceStatus): string {
   if (status === "UNPAID") {
@@ -32,7 +35,16 @@ export function InvoiceDetailPage() {
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRecordPaymentModalOpen, setIsRecordPaymentModalOpen] =
+    useState(false);
+  const [isActionLoading, setIsActionLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const canReceivePayment =
+    invoice?.status === "UNPAID" ||
+    invoice?.status === "PARTIALLY_PAID" ||
+    invoice?.status === "OVERDUE";
 
   useEffect(() => {
     if (!invoiceId) {
@@ -61,6 +73,41 @@ export function InvoiceDetailPage() {
 
     void fetchInvoice();
   }, [invoiceId]);
+
+  const handleDeletePayment = async (payment: Payment) => {
+    if (!invoice) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete payment ${payment.payment_no}?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsActionLoading(true);
+
+    try {
+      const response = await deletePaymentApi(invoice.id, payment.id);
+
+      setInvoice(response.data.invoice);
+      setSuccessMessage(
+        response.data.message ?? "Payment deleted successfully.",
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(
+          error.response?.data?.message ?? "Failed to delete payment.",
+        );
+      } else {
+        setErrorMessage("Failed to delete payment.");
+      }
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -127,15 +174,29 @@ export function InvoiceDetailPage() {
             </Link>
           )}
 
-          <button
-            type="button"
-            disabled
-            className="inline-flex cursor-not-allowed items-center justify-center rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-500"
-          >
-            Payment in Step 9
-          </button>
+          {canReceivePayment && (
+            <button
+              type="button"
+              onClick={() => setIsRecordPaymentModalOpen(true)}
+              className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
+              Record Payment
+            </button>
+          )}
         </div>
       </div>
+
+      {errorMessage && (
+        <div className="mb-4 w-full rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+          {errorMessage}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-4 w-full rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+          {successMessage}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
@@ -260,6 +321,92 @@ export function InvoiceDetailPage() {
             </div>
           </div>
 
+          <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+            <div className="border-b border-slate-200 px-6 py-4">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Payment History
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Payments recorded for this invoice.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Payment No
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Method
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Reference
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Amount
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-slate-200 bg-white">
+                  {(invoice.payments ?? []).length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-8 text-center text-sm text-slate-500"
+                      >
+                        No payments recorded.
+                      </td>
+                    </tr>
+                  ) : (
+                    (invoice.payments ?? []).map((payment) => (
+                      <tr key={payment.id}>
+                        <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-slate-900">
+                          {payment.payment_no}
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
+                          {formatDate(payment.payment_date)}
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
+                          {formatStatus(payment.payment_method)}
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
+                          {payment.reference_no ?? "-"}
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-slate-900">
+                          {formatCurrency(payment.amount)}
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
+                          <button
+                            type="button"
+                            onClick={() => void handleDeletePayment(payment)}
+                            disabled={isActionLoading}
+                            className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           {invoice.notes && (
             <div className="rounded-xl bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-slate-900">Notes</h2>
@@ -350,6 +497,18 @@ export function InvoiceDetailPage() {
           </div>
         </aside>
       </div>
+
+      {isRecordPaymentModalOpen && (
+        <RecordPaymentModal
+          invoice={invoice}
+          onClose={() => setIsRecordPaymentModalOpen(false)}
+          onPaymentRecorded={(updatedInvoice, message) => {
+            setInvoice(updatedInvoice);
+            setSuccessMessage(message ?? "Payment recorded successfully.");
+            setIsRecordPaymentModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import type { Payment } from "../payments/paymentTypes";
+
 export type InvoiceStatus =
   | "UNPAID"
   | "PARTIALLY_PAID"
@@ -68,7 +70,8 @@ export interface Invoice {
   paid_amount: string;
   balance_due: string;
   notes: string | null;
-  items: InvoiceItem[];
+  items?: InvoiceItem[];
+  payments?: Payment[];
   created_by?: InvoiceUser;
   updated_by?: InvoiceUser;
   created_at: string;
