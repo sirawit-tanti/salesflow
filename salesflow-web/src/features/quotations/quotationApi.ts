@@ -31,3 +31,15 @@ export async function updateQuotationApi(
 export async function deleteQuotationApi(quotationId: number) {
   return api.delete<{ message: string }>(`/quotations/${quotationId}`);
 }
+
+export async function sendQuotationApi(quotationId: number) {
+  return api.post<QuotationResponse>(`/quotations/${quotationId}/send`);
+}
+
+export async function acceptQuotationApi(quotationId: number) {
+  return api.post<QuotationResponse>(`/quotations/${quotationId}/accept`);
+}
+
+export async function rejectQuotationApi(quotationId: number) {
+  return api.post<QuotationResponse>(`/quotations/${quotationId}/reject`);
+}

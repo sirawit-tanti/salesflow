@@ -1,46 +1,126 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { formatDate } from "../../lib/formatDate";
 import { formatStatus } from "../../lib/formatStatus";
-import { getQuotationApi } from "./quotationApi";
+import {
+  acceptQuotationApi,
+  getQuotationApi,
+  rejectQuotationApi,
+  sendQuotationApi,
+} from "./quotationApi";
 import type { Quotation } from "./quotationTypes";
+
+function getStatusClass(status: string): string {
+  if (status === "DRAFT") {
+    return "bg-slate-100 text-slate-700";
+  }
+
+  if (status === "SENT") {
+    return "bg-blue-50 text-blue-700";
+  }
+
+  if (status === "ACCEPTED") {
+    return "bg-emerald-50 text-emerald-700";
+  }
+
+  if (status === "REJECTED") {
+    return "bg-red-50 text-red-700";
+  }
+
+  if (status === "EXPIRED") {
+    return "bg-amber-50 text-amber-700";
+  }
+
+  return "bg-indigo-50 text-indigo-700";
+}
 
 export function QuotationDetailPage() {
   const { quotationId } = useParams();
 
   const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isActionLoading, setIsActionLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  useEffect(() => {
+  const fetchQuotation = useCallback(async () => {
     if (!quotationId) {
       return;
     }
 
-    const fetchQuotation = async () => {
-      setIsLoading(true);
-      setErrorMessage("");
+    setIsLoading(true);
+    setErrorMessage("");
 
-      try {
-        const response = await getQuotationApi(Number(quotationId));
-        setQuotation(response.data.quotation);
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          setErrorMessage(
-            error.response?.data?.message ?? "Failed to load quotation.",
-          );
-        } else {
-          setErrorMessage("Failed to load quotation.");
-        }
-      } finally {
-        setIsLoading(false);
+    try {
+      const response = await getQuotationApi(Number(quotationId));
+      setQuotation(response.data.quotation);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(
+          error.response?.data?.message ?? "Failed to load quotation.",
+        );
+      } else {
+        setErrorMessage("Failed to load quotation.");
       }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [quotationId]);
+
+  useEffect(() => {
+    void fetchQuotation();
+  }, [fetchQuotation]);
+
+  const handleWorkflowAction = async (action: "send" | "accept" | "reject") => {
+    if (!quotation) {
+      return;
+    }
+
+    const actionLabelMap = {
+      send: "send",
+      accept: "accept",
+      reject: "reject",
     };
 
-    void fetchQuotation();
-  }, [quotationId]);
+    const confirmed = window.confirm(
+      `Are you sure you want to ${actionLabelMap[action]} quotation ${quotation.quotation_no}?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsActionLoading(true);
+
+    try {
+      const actionApiMap = {
+        send: sendQuotationApi,
+        accept: acceptQuotationApi,
+        reject: rejectQuotationApi,
+      };
+
+      const response = await actionApiMap[action](quotation.id);
+
+      setQuotation(response.data.quotation);
+      setSuccessMessage(
+        response.data.message ?? "Quotation updated successfully.",
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(
+          error.response?.data?.message ?? "Failed to update quotation.",
+        );
+      } else {
+        setErrorMessage("Failed to update quotation.");
+      }
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -50,7 +130,7 @@ export function QuotationDetailPage() {
     );
   }
 
-  if (errorMessage || !quotation) {
+  if (errorMessage && !quotation) {
     return (
       <div>
         <Link
@@ -61,7 +141,24 @@ export function QuotationDetailPage() {
         </Link>
 
         <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {errorMessage || "Quotation not found."}
+          {errorMessage}
+        </div>
+      </div>
+    );
+  }
+
+  if (!quotation) {
+    return (
+      <div>
+        <Link
+          to="/quotations"
+          className="text-sm font-medium text-slate-500 hover:text-slate-900"
+        >
+          ← Back to quotations
+        </Link>
+
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Quotation not found.
         </div>
       </div>
     );
@@ -69,7 +166,7 @@ export function QuotationDetailPage() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <Link
             to="/quotations"
@@ -78,24 +175,92 @@ export function QuotationDetailPage() {
             ← Back to quotations
           </Link>
 
-          <h1 className="mt-3 text-2xl font-bold text-slate-900">
-            {quotation.quotation_no}
-          </h1>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold text-slate-900">
+              {quotation.quotation_no}
+            </h1>
+
+            <span
+              className={[
+                "rounded-full px-2.5 py-1 text-xs font-medium",
+                getStatusClass(quotation.status),
+              ].join(" ")}
+            >
+              {formatStatus(quotation.status)}
+            </span>
+          </div>
 
           <p className="mt-1 text-sm text-slate-500">
-            Quotation detail and items.
+            Quotation detail and workflow actions.
           </p>
         </div>
 
-        {quotation.status === "DRAFT" && (
-          <Link
-            to={`/quotations/${quotation.id}/edit`}
-            className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-          >
-            Edit Quotation
-          </Link>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {quotation.status === "DRAFT" && (
+            <>
+              <Link
+                to={`/quotations/${quotation.id}/edit`}
+                className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+              >
+                Edit
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => void handleWorkflowAction("send")}
+                disabled={isActionLoading}
+                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isActionLoading ? "Processing..." : "Send Quotation"}
+              </button>
+            </>
+          )}
+
+          {quotation.status === "SENT" && (
+            <>
+              <button
+                type="button"
+                onClick={() => void handleWorkflowAction("accept")}
+                disabled={isActionLoading}
+                className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isActionLoading ? "Processing..." : "Accept"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void handleWorkflowAction("reject")}
+                disabled={isActionLoading}
+                className="inline-flex items-center justify-center rounded-lg border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isActionLoading ? "Processing..." : "Reject"}
+              </button>
+            </>
+          )}
+
+          {quotation.status === "ACCEPTED" && (
+            <button
+              type="button"
+              disabled
+              className="inline-flex cursor-not-allowed items-center justify-center rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-500"
+            >
+              Ready to Convert to Invoice
+            </button>
+          )}
+        </div>
       </div>
+
+      {errorMessage && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {errorMessage}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {successMessage}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
@@ -138,6 +303,15 @@ export function QuotationDetailPage() {
                 </p>
                 <p className="mt-1 text-sm text-slate-900">
                   {quotation.customer?.phone ?? "-"}
+                </p>
+              </div>
+
+              <div className="md:col-span-2">
+                <p className="text-xs font-medium uppercase text-slate-500">
+                  Address
+                </p>
+                <p className="mt-1 whitespace-pre-line text-sm text-slate-900">
+                  {quotation.customer?.address ?? "-"}
                 </p>
               </div>
             </div>
@@ -253,6 +427,20 @@ export function QuotationDetailPage() {
                 <dt className="text-slate-500">Expiry Date</dt>
                 <dd className="font-medium text-slate-900">
                   {formatDate(quotation.expiry_date)}
+                </dd>
+              </div>
+
+              <div className="flex justify-between">
+                <dt className="text-slate-500">Sent At</dt>
+                <dd className="font-medium text-slate-900">
+                  {quotation.sent_at ?? "-"}
+                </dd>
+              </div>
+
+              <div className="flex justify-between">
+                <dt className="text-slate-500">Accepted At</dt>
+                <dd className="font-medium text-slate-900">
+                  {quotation.accepted_at ?? "-"}
                 </dd>
               </div>
 
