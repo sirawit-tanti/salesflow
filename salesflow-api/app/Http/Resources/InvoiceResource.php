@@ -52,6 +52,9 @@ class InvoiceResource extends JsonResource
             'items' => InvoiceItemResource::collection(
                 $this->whenLoaded('items')
             ),
+            'payments' => PaymentResource::collection(
+                $this->whenLoaded('payment')
+            ),
             'created_by' => $this->whenLoaded('creator', function () {
                 return [
                     'id' => $this->creator->id,

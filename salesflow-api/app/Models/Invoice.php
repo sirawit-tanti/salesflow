@@ -75,4 +75,9 @@ class Invoice extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
 }

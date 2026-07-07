@@ -61,10 +61,11 @@ class InvoiceController extends Controller
                     'customer',
                     'quotation',
                     'items.product',
+                    'payments.creator:id,name',
                     'creator:id,name',
                     'updater:id,name',
                 ])
-            )
+            ),
         ]);
     }
 
