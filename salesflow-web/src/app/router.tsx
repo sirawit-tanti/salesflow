@@ -11,6 +11,8 @@ import { ProductListPage } from "../features/products/ProductListPage";
 import { QuotationDetailPage } from "../features/quotations/QuotationDetailPage";
 import { QuotationFormPage } from "../features/quotations/QuotationFormPage";
 import { QuotationListPage } from "../features/quotations/QuotationListPage";
+import { InvoiceDetailPage } from "../features/invoices/InvoiceDetailPage";
+import { InvoiceListPage } from "../features/invoices/InvoiceListPage";
 
 export const router = createBrowserRouter([
   {
@@ -75,6 +77,14 @@ export const router = createBrowserRouter([
           {
             path: "/quotations/:quotationId/edit",
             element: <QuotationFormPage />,
+          },
+          {
+            path: "/invoices",
+            element: <InvoiceListPage />,
+          },
+          {
+            path: "/invoices/:invoiceId",
+            element: <InvoiceDetailPage />,
           },
         ],
       },

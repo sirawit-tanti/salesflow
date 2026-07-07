@@ -6,6 +6,7 @@ import type {
   QuotationPayload,
   QuotationResponse,
 } from "./quotationTypes";
+import type { InvoiceResponse } from "../invoices/invoiceTypes";
 
 export async function getQuotationsApi(params: QuotationListParams = {}) {
   return api.get<PaginatedResponse<Quotation>>("/quotations", {
@@ -42,4 +43,10 @@ export async function acceptQuotationApi(quotationId: number) {
 
 export async function rejectQuotationApi(quotationId: number) {
   return api.post<QuotationResponse>(`/quotations/${quotationId}/reject`);
+}
+
+export async function convertQuotationToInvoiceApi(quotationId: number) {
+  return api.post<InvoiceResponse>(
+    `/quotations/${quotationId}/convert-to-invoice`,
+  );
 }

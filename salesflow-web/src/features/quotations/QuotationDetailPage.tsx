@@ -1,11 +1,12 @@
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { formatDate } from "../../lib/formatDate";
 import { formatStatus } from "../../lib/formatStatus";
 import {
   acceptQuotationApi,
+  convertQuotationToInvoiceApi,
   getQuotationApi,
   rejectQuotationApi,
   sendQuotationApi,
@@ -38,6 +39,7 @@ function getStatusClass(status: string): string {
 
 export function QuotationDetailPage() {
   const { quotationId } = useParams();
+  const navigate = useNavigate();
 
   const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -116,6 +118,40 @@ export function QuotationDetailPage() {
         );
       } else {
         setErrorMessage("Failed to update quotation.");
+      }
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleConvertToInvoice = async () => {
+    if (!quotation) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Convert quotation ${quotation.quotation_no} to invoice?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsActionLoading(true);
+
+    try {
+      const response = await convertQuotationToInvoiceApi(quotation.id);
+
+      navigate(`/invoices/${response.data.invoice.id}`);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(
+          error.response?.data?.message ?? "Failed to convert quotation.",
+        );
+      } else {
+        setErrorMessage("Failed to convert quotation.");
       }
     } finally {
       setIsActionLoading(false);
@@ -241,10 +277,11 @@ export function QuotationDetailPage() {
           {quotation.status === "ACCEPTED" && (
             <button
               type="button"
-              disabled
-              className="inline-flex cursor-not-allowed items-center justify-center rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-500"
+              onClick={() => void handleConvertToInvoice()}
+              disabled={isActionLoading}
+              className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Ready to Convert to Invoice
+              {isActionLoading ? "Processing..." : "Convert to Invoice"}
             </button>
           )}
         </div>

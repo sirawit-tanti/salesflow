@@ -28,6 +28,11 @@ const navItems: NavItem[] = [
     to: "/quotations",
     roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
   },
+  {
+    label: "Invoices",
+    to: "/invoices",
+    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
+  },
 ];
 
 export function Sidebar() {
