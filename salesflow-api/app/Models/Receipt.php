@@ -4,23 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Payment extends Model
+class Receipt extends Model
 {
     use SoftDeletes;
 
-    public const METHOD_CASH = 'CASH';
-    public const METHOD_BANK_TRANSFER = 'BANK_TRANSFER';
-    public const METHOD_CREDIT_CARD = 'CREDIT_CARD';
-    public const METHOD_CHEQUE = 'CHEQUE';
-    public const METHOD_OTHER = 'OTHER';
-
     protected $fillable = [
+        'receipt_no',
         'invoice_id',
-        'payment_no',
-        'payment_date',
+        'payment_id',
+        'customer_id',
+        'receipt_date',
         'amount',
         'payment_method',
         'reference_no',
@@ -32,7 +27,7 @@ class Payment extends Model
     protected function casts(): array
     {
         return [
-            'payment_date' => 'date',
+            'receipt_date' => 'date',
             'amount' => 'decimal:2',
         ];
     }
@@ -40,6 +35,16 @@ class Payment extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function payment(): BelongsTo
+    {
+        return $this->belongsTo(Payment::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function creator(): BelongsTo
@@ -50,10 +55,5 @@ class Payment extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function receipt(): HasOne
-    {
-        return $this->hasOne(Receipt::class);
     }
 }

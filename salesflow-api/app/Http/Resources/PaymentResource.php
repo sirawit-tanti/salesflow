@@ -23,6 +23,12 @@ class PaymentResource extends JsonResource
             'payment_date' => $this->payment_date?->toDateString(),
             'amount' => $this->amount,
             'payment_method' => $this->payment_method,
+            'receipt' => $this->whenLoaded('receipt', function () {
+                return [
+                    'id' => $this->receipt->id,
+                    'receipt_no' => $this->receipt->receipt_no,
+                ];
+            }),
             'reference_no' => $this->reference_no,
             'notes' => $this->notes,
             'created_by' => $this->whenLoaded('creator', function () {

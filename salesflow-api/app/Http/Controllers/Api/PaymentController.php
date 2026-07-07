@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Payments\StorePaymentRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Http\Resources\PaymentResource;
+use App\Http\Resources\ReceiptResource;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\Receipt;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,6 +59,20 @@ class PaymentController extends Controller
                 'updated_by' => $request->user()->id,
             ]);
 
+            Receipt::create([
+                'receipt_no' => $this->generateReceiptNo(),
+                'invoice_id' => $invoice->id,
+                'payment_id' => $payment->id,
+                'customer_id' => $invoice->customer_id,
+                'receipt_date' => $validated['payment_date'],
+                'amount' => $validated['amount'],
+                'payment_method' => $validated['payment_method'],
+                'reference_no' => $validated['reference_no'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'created_by' => $request->user()->id,
+                'updated_by' => $request->user()->id,
+            ]);
+
             $this->recalculateInvoicePaymentStatus($invoice, $request->user()->id);
 
             return $payment;
@@ -65,14 +81,25 @@ class PaymentController extends Controller
         return response()->json([
             'message' => 'Payment recorded successfully.',
             'payment' => new PaymentResource(
-                $payment->load(['invoice', 'creator:id,name', 'updater:id,name']),
+                $payment->load(['invoice', 'receipt', 'creator:id,name', 'updater:id,name']),
+            ),
+            'receipt' => new ReceiptResource(
+                $payment->receipt->load([
+                    'invoice',
+                    'payment',
+                    'customer',
+                    'creator:id,name',
+                    'updater:id,name'
+                ])
             ),
             'invoice' => new InvoiceResource(
                 $invoice->fresh()->load([
                     'customer',
                     'quotation',
                     'items.product',
+                    'payments.receipt',
                     'payments.creator:id,name',
+                    'receipts',
                     'creator:id,name',
                     'updater:id,name',
                 ]),
@@ -111,7 +138,9 @@ class PaymentController extends Controller
                     'customer',
                     'quotation',
                     'items.product',
+                    'payments.receipt',
                     'payments.creator:id,name',
+                    'receipts',
                     'creator:id,name',
                     'updater:id,name',
                 ])
@@ -159,5 +188,25 @@ class PaymentController extends Controller
         );
 
         return $paymentNo;
+    }
+
+    private function generateReceiptNo(): string
+    {
+        $year = now()->format('Y');
+
+        $nextNumber = Receipt::withTrashed()
+            ->where('receipt_no', 'like', "RCPT-{$year}-%")
+            ->count() + 1;
+
+        do {
+            $receiptNo = 'RCPT-'.$year.'-'.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+            $nextNumber++;
+        } while (
+            Receipt::withTrashed()
+                ->where('receipt_no', $receiptNo)
+                ->exists()
+        );
+
+        return $receiptNo;
     }
 }

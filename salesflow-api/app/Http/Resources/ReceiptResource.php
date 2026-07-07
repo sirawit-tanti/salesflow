@@ -5,24 +5,33 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class InvoiceResource extends JsonResource
+class ReceiptResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
-            'invoice_no' => $this->invoice_no,
-            'quotation_id' => $this->quotation_id,
-            'quotation' => $this->whenLoaded('quotation', function () {
+            'receipt_no' => $this->receipt_no,
+            'invoice_id' => $this->invoice_id,
+            'invoice' => $this->whenLoaded('invoice', function () {
                 return [
-                    'id' => $this->quotation->id,
-                    'quotation_no' => $this->quotation->quotation_no,
-                    'status' => $this->quotation->status,
+                    'id' => $this->invoice->id,
+                    'invoice_no' => $this->invoice->invoice_no,
+                    'status' => $this->invoice->status,
+                    'total_amount' => $this->invoice->total_amount,
+                    'paid_amount' => $this->invoice->paid_amount,
+                    'balance_due' => $this->invoice->balance_due,
+                ];
+            }),
+            'payment_id' => $this->payment_id,
+            'payment' => $this->whenLoaded('payment', function () {
+                return [
+                    'id' => $this->payment->id,
+                    'payment_no' => $this->payment->payment_no,
+                    'payment_date' => $this->payment->payment_date?->toDateString(),
+                    'amount' => $this->payment->amount,
+                    'payment_method' => $this->payment->payment_method,
+                    'reference_no' => $this->payment->reference_no,
                 ];
             }),
             'customer_id' => $this->customer_id,
@@ -38,26 +47,11 @@ class InvoiceResource extends JsonResource
                     'address' => $this->customer->address,
                 ];
             }),
-            'status' => $this->status,
-            'issue_date' => $this->issue_date?->toDateString(),
-            'due_date' => $this->due_date?->toDateString(),
-            'sub_total' => $this->sub_total,
-            'discount_amount' => $this->discount_amount,
-            'tax_rate' => $this->tax_rate,
-            'tax_amount' => $this->tax_amount,
-            'total_amount' => $this->total_amount,
-            'paid_amount' => $this->paid_amount,
-            'balance_due' => $this->balance_due,
+            'receipt_date' => $this->receipt_date?->toDateString(),
+            'amount' => $this->amount,
+            'payment_method' => $this->payment_method,
+            'reference_no' => $this->reference_no,
             'notes' => $this->notes,
-            'items' => InvoiceItemResource::collection(
-                $this->whenLoaded('items')
-            ),
-            'payments' => PaymentResource::collection(
-                $this->whenLoaded('payments')
-            ),
-            'receipts' => ReceiptResource::collection(
-                $this->whenLoaded('receipts')
-            ),
             'created_by' => $this->whenLoaded('creator', function () {
                 return [
                     'id' => $this->creator->id,

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\QuotationController;
+use App\Http\Controllers\Api\ReceiptController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', function () {
@@ -39,5 +40,10 @@ Route::middleware('auth:sanctum')->group(function () {
         'index',
         'show',
         'destroy',
+    ]);
+    
+    Route::apiResource('receipts', ReceiptController::class)->only([
+        'index',
+        'show',
     ]);
 });
