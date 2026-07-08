@@ -10,6 +10,7 @@ use App\Http\Resources\ReceiptResource;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Receipt;
+use App\Services\AuditLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -77,6 +78,22 @@ class PaymentController extends Controller
 
             return $payment;
         });
+        
+        app(AuditLogService::class)->log(
+            request: $request,
+            action: 'recorded',
+            module: 'payments',
+            auditable: $payment,
+            description: "Recorded payment {$payment->payment_no} for invoice {$invoice->invoice_no}.",
+            newValues: [
+                'payment_no' => $payment->payment_no,
+                'invoice_id' => $invoice->id,
+                'invoice_no' => $invoice->invoice_no,
+                'amount' => $payment->amount,
+                'payment_method' => $payment->payment_method,
+                'reference_no' => $payment->reference_no,
+            ]
+        );
 
         return response()->json([
             'message' => 'Payment recorded successfully.',
@@ -121,6 +138,14 @@ class PaymentController extends Controller
             ], 422);
         }
 
+        $oldValues = [
+            'payment_no' => $payment->payment_no,
+            'invoice_id' => $payment->invoice_id,
+            'amount' => $payment->amount,
+            'payment_method' => $payment->payment_method,
+            'reference_no' => $payment->reference_no,
+        ];
+
         DB::transaction(function () use ($request, $invoice, $payment) {
             $payment->update([
                 'updated_by' => $request->user()->id,
@@ -130,6 +155,15 @@ class PaymentController extends Controller
 
             $this->recalculateInvoicePaymentStatus($invoice, $request->user()->id);
         });
+
+        app(AuditLogService::class)->log(
+            request: $request,
+            action: 'deleted',
+            module: 'payments',
+            auditable: $payment,
+            description: "Deleted payment {$oldValues['payment_no']} from invoice {$invoice->invoice_no}.",
+            oldValues: $oldValues
+        );
 
         return response()->json([
             'message' => 'Payment deleted successfully.',

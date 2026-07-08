@@ -9,6 +9,7 @@ use App\Http\Resources\InvoiceResource;
 use App\Http\Resources\QuotationResource;
 use App\Models\Invoice;
 use App\Models\Quotation;
+use App\Services\AuditLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -86,6 +87,22 @@ class QuotationController extends Controller
 
             return $quotation;
         });
+
+        app(AuditLogService::class)->log(
+            request: $request,
+            action: 'created',
+            module: 'quotations',
+            auditable: $quotation,
+            description: "Created quotation {$quotation->quotation_no}.",
+            newValues: $quotation->only([
+                'quotation_no',
+                'customer_id',
+                'status',
+                'issue_date',
+                'expiry_date',
+                'total_amount',
+            ])
+        );
 
         return response()->json([
             'message' => 'Quotation created successfully.',
@@ -182,7 +199,7 @@ class QuotationController extends Controller
         ]);
     }
 
-    public function send(Quotation $quotation): JsonResponse
+    public function send(Request $request, Quotation $quotation): JsonResponse
     {
         if ($quotation->status !== Quotation::STATUS_DRAFT) {
             return response()->json([
@@ -196,11 +213,29 @@ class QuotationController extends Controller
             ], 422);
         }
 
+        $oldValues = [
+            'status' => $quotation->status,
+            'sent_at' => $quotation->sent_at,
+        ];
+
         $quotation->update([
             'status' => Quotation::STATUS_SENT,
             'sent_at' => now(),
             'updated_by' => request()->user()->id,
         ]);
+
+        app(AuditLogService::class)->log(
+            request: $request,
+            action: 'sent',
+            module: 'quotations',
+            auditable: $quotation,
+            description: "Sent quotation {$quotation->quotation_no}.",
+            oldValues: $oldValues,
+            newValues: [
+                'status' => $quotation->status,
+                'sent_at' => $quotation->sent_at,
+            ]
+        );
 
         return response()->json([
             'message' => 'Quotation sent successfully.',
@@ -215,7 +250,7 @@ class QuotationController extends Controller
         ]);
     }
 
-    public function accept(Quotation $quotation): JsonResponse
+    public function accept(Request $request, Quotation $quotation): JsonResponse
     {
         if ($quotation->status !== Quotation::STATUS_SENT) {
             return response()->json([
@@ -223,11 +258,29 @@ class QuotationController extends Controller
             ], 422);
         }
 
+        $oldValues = [
+            'status' => $quotation->status,
+            'accepted_at' => $quotation->accepted_at,
+        ];
+
         $quotation->update([
             'status' => Quotation::STATUS_ACCEPTED,
             'accepted_at' => now(),
             'updated_by' => request()->user()->id,
         ]);
+
+        app(AuditLogService::class)->log(
+            request: $request,
+            action: 'accepted',
+            module: 'quotations',
+            auditable: $quotation,
+            description: "Accepted quotation {$quotation->quotation_no}.",
+            oldValues: $oldValues,
+            newValues: [
+                'status' => $quotation->status,
+                'accepted_at' => $quotation->accepted_at,
+            ]
+        );
 
         return response()->json([
             'message' => 'Quotation accepted successfully.',
@@ -242,7 +295,7 @@ class QuotationController extends Controller
         ]);
     }
 
-    public function reject(Quotation $quotation): JsonResponse
+    public function reject(Request $request, Quotation $quotation): JsonResponse
     {
         if ($quotation->status !== Quotation::STATUS_SENT) {
             return response()->json([
@@ -250,10 +303,26 @@ class QuotationController extends Controller
             ], 422);
         }
 
+        $oldValues = [
+            'status' => $quotation->status,
+        ];
+
         $quotation->update([
             'status' => Quotation::STATUS_REJECTED,
             'updated_by' => request()->user()->id,
         ]);
+
+        app(AuditLogService::class)->log(
+            request: $request,
+            action: 'rejected',
+            module: 'quotations',
+            auditable: $quotation,
+            description: "Rejected quotation {$quotation->quotation_no}.",
+            oldValues: $oldValues,
+            newValues: [
+                'status' => $quotation->status,
+            ]
+        );
 
         return response()->json([
             'message' => 'Quotation rejected successfully.',
@@ -326,6 +395,36 @@ class QuotationController extends Controller
 
             return $invoice;
         });
+
+        app(AuditLogService::class)->log(
+            request: $request,
+            action: 'converted',
+            module: 'quotations',
+            auditable: $quotation,
+            description: "Converted quotation {$quotation->quotation_no} to invoice {$invoice->invoice_no}.",
+            oldValues: [
+                'status' => Quotation::STATUS_ACCEPTED,
+            ],
+            newValues: [
+                'status' => Quotation::STATUS_CONVERTED,
+                'invoice_id' => $invoice->id,
+                'invoice_no' => $invoice->invoice_no,
+            ]
+        );
+
+        app(AuditLogService::class)->log(
+            request: $request,
+            action: 'created_from_quotation',
+            module: 'invoices',
+            auditable: $invoice,
+            description: "Created invoice {$invoice->invoice_no} from quotation {$quotation->quotation_no}.",
+            newValues: [
+                'invoice_no' => $invoice->invoice_no,
+                'quotation_id' => $quotation->id,
+                'customer_id' => $invoice->customer_id,
+                'total_amount' => $invoice->total_amount,
+            ]
+        );
 
         return response()->json([
             'message' => 'Quotation converted to invoice successfully.',
