@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\InvoiceOverdueController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\QuotationController;
@@ -38,6 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/invoices/{invoice}/payments', [PaymentController::class, 'index']);
     Route::post('/invoices/{invoice}/payments', [PaymentController::class, 'store']);
     Route::delete('/invoices/{invoice}/payments/{payment}', [PaymentController::class, 'destroy']);
+
+    Route::post('/invoices/mark-overdue', [InvoiceOverdueController::class, 'markOverdue']);
 
     Route::apiResource('invoices', InvoiceController::class)->only([
         'index',

@@ -155,11 +155,15 @@ class PaymentController extends Controller
         $balanceDue = max($totalAmount - $paidAmount, 0);
 
         if ($paidAmount <= 0) {
-            $status = Invoice::STATUS_UNPAID;
+            $status = $this->isInvoicePastDue($invoice) 
+                ? Invoice::STATUS_OVERDUE 
+                : Invoice::STATUS_UNPAID;
         } else if ($balanceDue <= 0) {
             $status = Invoice::STATUS_PAID;
         } else {
-            $status = Invoice::STATUS_PARTIALLY_PAID;
+            $status = $this->isInvoicePastDue($invoice) 
+                ? Invoice::STATUS_OVERDUE 
+                : Invoice::STATUS_PARTIALLY_PAID;
         }
 
         $invoice->update([
@@ -168,6 +172,11 @@ class PaymentController extends Controller
             'status' => $status,
             'updated_by' => $userId,
         ]);
+    }
+
+    private function isInvoicePastDue(Invoice $invoice): bool
+    {
+        return $invoice->due_date !== null && $invoice->due_date->lt(now()->startOfDay());
     }
 
     private function generatePaymentNo(): string
