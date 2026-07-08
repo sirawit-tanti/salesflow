@@ -5,7 +5,11 @@ import { formatCurrency } from "../../lib/formatCurrency";
 import { formatDate } from "../../lib/formatDate";
 import { formatStatus } from "../../lib/formatStatus";
 import type { PaginationMeta } from "../../types/pagination";
-import { deleteInvoiceApi, getInvoicesApi } from "./invoiceApi";
+import {
+  deleteInvoiceApi,
+  getInvoicesApi,
+  markOverdueInvoicesApi,
+} from "./invoiceApi";
 import type { Invoice, InvoiceStatus } from "./invoiceTypes";
 
 const invoiceStatuses: Array<InvoiceStatus | ""> = [
@@ -45,6 +49,7 @@ export function InvoiceListPage() {
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "">("");
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isActionLoading, setIsActionLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -105,6 +110,41 @@ export function InvoiceListPage() {
     }
   };
 
+  const handleMarkOverdue = async () => {
+    const confirmed = window.confirm(
+      "Mark all past-due unpaid invoices as overdue?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsActionLoading(true);
+
+    try {
+      const response = await markOverdueInvoicesApi();
+
+      setSuccessMessage(
+        `${response.data.message} Updated ${response.data.updated_count} invoice(s).`,
+      );
+
+      setPage(1);
+      await fetchInvoices();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(
+          error.response?.data?.message ?? "Failed to mark overdue invoices.",
+        );
+      } else {
+        setErrorMessage("Failed to mark overdue invoices.");
+      }
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
   const goToPreviousPage = () => {
     if (!meta || meta.current_page <= 1) {
       return;
@@ -123,11 +163,22 @@ export function InvoiceListPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Invoices</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          View invoices generated from accepted quotations.
-        </p>
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Invoices</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            View invoices generated from accepted quotations.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => void handleMarkOverdue()}
+          disabled={isActionLoading}
+          className="inline-flex items-center justify-center rounded-lg border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isActionLoading ? "Checking..." : "Mark Overdue"}
+        </button>
       </div>
 
       {errorMessage && (
@@ -285,7 +336,14 @@ export function InvoiceListPage() {
                       {formatDate(invoice.issue_date)}
                     </td>
 
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
+                    <td
+                      className={[
+                        "whitespace-nowrap px-4 py-3 text-sm",
+                        invoice.status === "OVERDUE"
+                          ? "font-semibold text-red-700"
+                          : "text-slate-600",
+                      ].join(" ")}
+                    >
                       {formatDate(invoice.due_date)}
                     </td>
 
@@ -293,7 +351,14 @@ export function InvoiceListPage() {
                       {formatCurrency(invoice.total_amount)}
                     </td>
 
-                    <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-slate-900">
+                    <td
+                      className={[
+                        "whitespace-nowrap px-4 py-3 text-right text-sm font-semibold",
+                        invoice.status === "OVERDUE"
+                          ? "text-red-700"
+                          : "text-slate-900",
+                      ].join(" ")}
+                    >
                       {formatCurrency(invoice.balance_due)}
                     </td>
 

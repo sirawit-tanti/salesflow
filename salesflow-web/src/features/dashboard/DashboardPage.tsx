@@ -6,6 +6,7 @@ import { formatDate } from "../../lib/formatDate";
 import { formatStatus } from "../../lib/formatStatus";
 import { getDashboardSummaryApi } from "./dashboardApi";
 import type { DashboardSummaryResponse } from "./dashboardTypes";
+import { markOverdueInvoicesApi } from "../invoices/invoiceApi";
 
 interface StatCardProps {
   title: string;
@@ -44,31 +45,67 @@ export function DashboardPage() {
     null,
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [isActionLoading, setIsActionLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      setIsLoading(true);
-      setErrorMessage("");
-
-      try {
-        const response = await getDashboardSummaryApi();
-        setDashboard(response.data);
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          setErrorMessage(
-            error.response?.data?.message ?? "Failed to load dashboard.",
-          );
-        } else {
-          setErrorMessage("Failed to load dashboard.");
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     void fetchDashboard();
   }, []);
+
+  const fetchDashboard = async () => {
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      const response = await getDashboardSummaryApi();
+      setDashboard(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(
+          error.response?.data?.message ?? "Failed to load dashboard.",
+        );
+      } else {
+        setErrorMessage("Failed to load dashboard.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMarkOverdue = async () => {
+    const confirmed = window.confirm(
+      "Mark all past-due unpaid invoices as overdue?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsActionLoading(true);
+
+    try {
+      const response = await markOverdueInvoicesApi();
+
+      setSuccessMessage(
+        `${response.data.message} Updated ${response.data.updated_count} invoice(s).`,
+      );
+
+      await fetchDashboard();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(
+          error.response?.data?.message ?? "Failed to mark overdue invoices.",
+        );
+      } else {
+        setErrorMessage("Failed to mark overdue invoices.");
+      }
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -103,6 +140,14 @@ export function DashboardPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void handleMarkOverdue()}
+            disabled={isActionLoading}
+            className="rounded-lg border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {isActionLoading ? "Checking..." : "Mark Overdue"}
+          </button>
           <Link
             to="/quotations/create"
             className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
@@ -118,6 +163,12 @@ export function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {successMessage && (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+          {successMessage}
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard

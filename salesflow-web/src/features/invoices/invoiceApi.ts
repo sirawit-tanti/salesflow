@@ -6,6 +6,11 @@ import type {
   InvoiceResponse,
 } from "./invoiceTypes";
 
+export interface MarkOverdueInvoicesResponse {
+  message: string;
+  updated_count: number;
+}
+
 export async function getInvoicesApi(params: InvoiceListParams = {}) {
   return api.get<PaginatedResponse<Invoice>>("/invoices", {
     params,
@@ -18,4 +23,8 @@ export async function getInvoiceApi(invoiceId: number) {
 
 export async function deleteInvoiceApi(invoiceId: number) {
   return api.delete<{ message: string }>(`/invoices/${invoiceId}`);
+}
+
+export async function markOverdueInvoicesApi() {
+  return api.post<MarkOverdueInvoicesResponse>("/invoices/mark-overdue");
 }
