@@ -7,30 +7,12 @@ import { formatStatus } from "../../lib/formatStatus";
 import { RecordPaymentModal } from "../payments/RecordPaymentModal";
 import { deletePaymentApi } from "../payments/paymentApi";
 import { getInvoiceApi } from "./invoiceApi";
-import type { Invoice, InvoiceStatus } from "./invoiceTypes";
+import type { Invoice } from "./invoiceTypes";
 import type { Payment } from "../payments/paymentTypes";
 import { useAuth } from "../auth/AuthContext";
 import { canDeletePayment, canRecordPayment } from "../../lib/permissions";
-
-function getStatusClass(status: InvoiceStatus): string {
-  if (status === "UNPAID") {
-    return "bg-amber-50 text-amber-700";
-  }
-
-  if (status === "PARTIALLY_PAID") {
-    return "bg-blue-50 text-blue-700";
-  }
-
-  if (status === "PAID") {
-    return "bg-emerald-50 text-emerald-700";
-  }
-
-  if (status === "OVERDUE") {
-    return "bg-red-50 text-red-700";
-  }
-
-  return "bg-slate-100 text-slate-700";
-}
+import { StatusBadge } from "../../components/ui/StatusBadge";
+import { downloadInvoicePdfApi } from "../pdfs/pdfApi";
 
 export function InvoiceDetailPage() {
   const { user } = useAuth();
@@ -42,9 +24,10 @@ export function InvoiceDetailPage() {
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
   const [isRecordPaymentModalOpen, setIsRecordPaymentModalOpen] =
     useState(false);
-  const [isActionLoading, setIsActionLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -117,6 +100,29 @@ export function InvoiceDetailPage() {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    if (!invoice) {
+      return;
+    }
+
+    setErrorMessage("");
+    setIsPdfDownloading(true);
+
+    try {
+      await downloadInvoicePdfApi(invoice.id, invoice.invoice_no);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(
+          error.response?.data?.message ?? "Failed to download invoice PDF.",
+        );
+      } else {
+        setErrorMessage("Failed to download invoice PDF.");
+      }
+    } finally {
+      setIsPdfDownloading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="rounded-xl bg-white p-6 shadow-sm">
@@ -157,14 +163,7 @@ export function InvoiceDetailPage() {
               {invoice.invoice_no}
             </h1>
 
-            <span
-              className={[
-                "rounded-full px-2.5 py-1 text-xs font-medium",
-                getStatusClass(invoice.status),
-              ].join(" ")}
-            >
-              {formatStatus(invoice.status)}
-            </span>
+            <StatusBadge status={invoice.status} />
           </div>
 
           <p className="mt-1 text-sm text-slate-500">
@@ -181,6 +180,15 @@ export function InvoiceDetailPage() {
               View Quotation
             </Link>
           )}
+
+          <button
+            type="button"
+            onClick={() => void handleDownloadPdf()}
+            disabled={isPdfDownloading}
+            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {isPdfDownloading ? "Downloading..." : "Download PDF"}
+          </button>
 
           {canReceivePayment && (
             <button

@@ -15,6 +15,7 @@ import type { Quotation } from "./quotationTypes";
 import { useAuth } from "../auth/AuthContext";
 import { canConvertQuotation, canSendQuotation } from "../../lib/permissions";
 import { StatusBadge } from "../../components/ui/StatusBadge";
+import { downloadQuotationPdfApi } from "../pdfs/pdfApi";
 
 export function QuotationDetailPage() {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ export function QuotationDetailPage() {
   const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -142,6 +144,29 @@ export function QuotationDetailPage() {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    if (!quotation) {
+      return;
+    }
+
+    setErrorMessage("");
+    setIsPdfDownloading(true);
+
+    try {
+      await downloadQuotationPdfApi(quotation.id, quotation.quotation_no);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(
+          error.response?.data?.message ?? "Failed to download quotation PDF.",
+        );
+      } else {
+        setErrorMessage("Failed to download quotation PDF.");
+      }
+    } finally {
+      setIsPdfDownloading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="rounded-xl bg-white p-6 shadow-sm">
@@ -209,6 +234,15 @@ export function QuotationDetailPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void handleDownloadPdf()}
+            disabled={isPdfDownloading}
+            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {isPdfDownloading ? "Downloading..." : "Download PDF"}
+          </button>
+
           {quotation.status === "DRAFT" && canSend && (
             <>
               <Link

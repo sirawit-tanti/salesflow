@@ -6,12 +6,14 @@ import { formatDate } from "../../lib/formatDate";
 import { formatStatus } from "../../lib/formatStatus";
 import { getReceiptApi } from "./receiptApi";
 import type { Receipt } from "./receiptTypes";
+import { downloadReceiptPdfApi } from "../pdfs/pdfApi";
 
 export function ReceiptDetailPage() {
   const { receiptId } = useParams();
 
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -41,6 +43,29 @@ export function ReceiptDetailPage() {
 
     void fetchReceipt();
   }, [receiptId]);
+
+  const handleDownloadPdf = async () => {
+    if (!receipt) {
+      return;
+    }
+
+    setErrorMessage("");
+    setIsPdfDownloading(true);
+
+    try {
+      await downloadReceiptPdfApi(receipt.id, receipt.receipt_no);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(
+          error.response?.data?.message ?? "Failed to download receipt PDF.",
+        );
+      } else {
+        setErrorMessage("Failed to download receipt PDF.");
+      }
+    } finally {
+      setIsPdfDownloading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -99,10 +124,11 @@ export function ReceiptDetailPage() {
 
           <button
             type="button"
-            disabled
-            className="inline-flex cursor-not-allowed items-center justify-center rounded-lg bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-500"
+            onClick={() => void handleDownloadPdf()}
+            disabled={isPdfDownloading}
+            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            PDF in Later Step
+            {isPdfDownloading ? "Downloading..." : "Download PDF"}
           </button>
         </div>
       </div>
