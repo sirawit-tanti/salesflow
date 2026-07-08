@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\QuotationController;
 use App\Http\Controllers\Api\ReceiptController;
+use App\Http\Controllers\Api\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', function () {
@@ -25,6 +26,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
+    
+    Route::prefix('reports')->group(function () {
+        Route::get('/sales', [ReportController::class, 'sales']);
+        Route::get('/sales/export', [ReportController::class, 'exportSales']);
+
+        Route::get('/payments', [ReportController::class, 'payments']);
+        Route::get('/payments/export', [ReportController::class, 'exportPayments']);
+
+        Route::get('/outstanding-invoices', [ReportController::class, 'outstandingInvoices']);
+        Route::get('/outstanding-invoices/export', [ReportController::class, 'exportOutstandingInvoices']);
+    });
 
     Route::apiResource('customers', CustomerController::class);
     Route::apiResource('products', ProductController::class);
