@@ -18,6 +18,7 @@ import type {
   ReportTab,
   SalesReportResponse,
 } from "./reportTypes";
+import { StatusBadge } from "../../components/ui/StatusBadge";
 
 interface SummaryCardProps {
   title: string;
@@ -579,7 +580,7 @@ export function ReportsPage() {
                           {invoice.customer?.name ?? "-"}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
-                          {formatStatus(invoice.status)}
+                          <StatusBadge status={invoice.status} />
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
                           {formatDate(invoice.issue_date)}
@@ -830,7 +831,7 @@ export function ReportsPage() {
                           {invoice.customer?.name ?? "-"}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
-                          {formatStatus(invoice.status)}
+                          <StatusBadge status={invoice.status} />
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
                           {formatDate(invoice.issue_date)}

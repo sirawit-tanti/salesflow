@@ -16,6 +16,7 @@ import {
   canManageInvoices,
   canMarkOverdueInvoices,
 } from "../../lib/permissions";
+import { StatusBadge } from "../../components/ui/StatusBadge";
 
 const invoiceStatuses: Array<InvoiceStatus | ""> = [
   "",
@@ -25,26 +26,6 @@ const invoiceStatuses: Array<InvoiceStatus | ""> = [
   "OVERDUE",
   "CANCELLED",
 ];
-
-function getStatusClass(status: InvoiceStatus): string {
-  if (status === "UNPAID") {
-    return "bg-amber-50 text-amber-700";
-  }
-
-  if (status === "PARTIALLY_PAID") {
-    return "bg-blue-50 text-blue-700";
-  }
-
-  if (status === "PAID") {
-    return "bg-emerald-50 text-emerald-700";
-  }
-
-  if (status === "OVERDUE") {
-    return "bg-red-50 text-red-700";
-  }
-
-  return "bg-slate-100 text-slate-700";
-}
 
 export function InvoiceListPage() {
   const { user } = useAuth();
@@ -334,14 +315,7 @@ export function InvoiceListPage() {
                     </td>
 
                     <td className="whitespace-nowrap px-4 py-3">
-                      <span
-                        className={[
-                          "rounded-full px-2.5 py-1 text-xs font-medium",
-                          getStatusClass(invoice.status),
-                        ].join(" ")}
-                      >
-                        {formatStatus(invoice.status)}
-                      </span>
+                      <StatusBadge status={invoice.status} />
                     </td>
 
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">

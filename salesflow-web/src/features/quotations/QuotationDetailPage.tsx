@@ -14,30 +14,7 @@ import {
 import type { Quotation } from "./quotationTypes";
 import { useAuth } from "../auth/AuthContext";
 import { canConvertQuotation, canSendQuotation } from "../../lib/permissions";
-
-function getStatusClass(status: string): string {
-  if (status === "DRAFT") {
-    return "bg-slate-100 text-slate-700";
-  }
-
-  if (status === "SENT") {
-    return "bg-blue-50 text-blue-700";
-  }
-
-  if (status === "ACCEPTED") {
-    return "bg-emerald-50 text-emerald-700";
-  }
-
-  if (status === "REJECTED") {
-    return "bg-red-50 text-red-700";
-  }
-
-  if (status === "EXPIRED") {
-    return "bg-amber-50 text-amber-700";
-  }
-
-  return "bg-indigo-50 text-indigo-700";
-}
+import { StatusBadge } from "../../components/ui/StatusBadge";
 
 export function QuotationDetailPage() {
   const { user } = useAuth();
@@ -223,14 +200,7 @@ export function QuotationDetailPage() {
               {quotation.quotation_no}
             </h1>
 
-            <span
-              className={[
-                "rounded-full px-2.5 py-1 text-xs font-medium",
-                getStatusClass(quotation.status),
-              ].join(" ")}
-            >
-              {formatStatus(quotation.status)}
-            </span>
+            <StatusBadge status={quotation.status} />
           </div>
 
           <p className="mt-1 text-sm text-slate-500">

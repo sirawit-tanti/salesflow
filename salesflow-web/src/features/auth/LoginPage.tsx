@@ -102,10 +102,27 @@ export function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 rounded-lg bg-slate-50 p-4 text-xs text-slate-500">
-          <p className="font-medium text-slate-700">Demo account</p>
-          <p className="mt-1">Email: admin@salesflow.test</p>
-          <p>Password: password</p>
+        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm font-semibold text-slate-900">Demo Accounts</p>
+
+          <div className="mt-3 space-y-2 text-xs text-slate-600">
+            <p>
+              <span className="font-medium text-slate-900">Admin:</span>{" "}
+              admin@salesflow.test / password
+            </p>
+            <p>
+              <span className="font-medium text-slate-900">Sales:</span>{" "}
+              sales@salesflow.test / password
+            </p>
+            <p>
+              <span className="font-medium text-slate-900">Accountant:</span>{" "}
+              accountant@salesflow.test / password
+            </p>
+            <p>
+              <span className="font-medium text-slate-900">Manager:</span>{" "}
+              manager@salesflow.test / password
+            </p>
+          </div>
         </div>
       </div>
     </div>
