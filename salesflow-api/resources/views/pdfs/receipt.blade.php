@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>{{ $receipt->receipt_no }}</title>
+
+    <style>
+    body {
+        font-family: DejaVu Sans, sans-serif;
+        font-size: 12px;
+        color: #111827;
+    }
+
+    .header {
+        display: table;
+        width: 100%;
+        margin-bottom: 24px;
+    }
+
+    .header-left,
+    .header-right {
+        display: table-cell;
+        vertical-align: top;
+        width: 50%;
+    }
+
+    .header-right {
+        text-align: right;
+    }
+
+    .company-name {
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+
+    .document-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .muted {
+        color: #6b7280;
+    }
+
+    .section {
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .box {
+        border: 1px solid #e5e7eb;
+        padding: 14px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+    }
+
+    .amount-box {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        padding: 18px;
+        text-align: center;
+        margin: 24px 0;
+    }
+
+    .amount-label {
+        color: #6b7280;
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .amount-value {
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    td {
+        padding: 7px 0;
+        vertical-align: top;
+    }
+
+    .label {
+        width: 160px;
+        color: #6b7280;
+    }
+
+    .footer {
+        margin-top: 36px;
+        font-size: 11px;
+        color: #6b7280;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="company-name">SalesFlow</div>
+            <div class="muted">Quotation, Invoice & Payment Management System</div>
+        </div>
+
+        <div class="header-right">
+            <div class="document-title">RECEIPT</div>
+            <div><strong>No:</strong> {{ $receipt->receipt_no }}</div>
+            <div><strong>Date:</strong> {{ $receipt->receipt_date?->format('Y-m-d') }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Received From</div>
+
+        <div class="box">
+            <div><strong>Name:</strong> {{ $receipt->customer?->name ?? '-' }}</div>
+            <div><strong>Company:</strong> {{ $receipt->customer?->company_name ?? '-' }}</div>
+            <div><strong>Email:</strong> {{ $receipt->customer?->email ?? '-' }}</div>
+            <div><strong>Phone:</strong> {{ $receipt->customer?->phone ?? '-' }}</div>
+            <div><strong>Tax ID:</strong> {{ $receipt->customer?->tax_id ?? '-' }}</div>
+            <div><strong>Address:</strong> {{ $receipt->customer?->address ?? '-' }}</div>
+        </div>
+    </div>
+
+    <div class="amount-box">
+        <div class="amount-label">Receipt Amount</div>
+        <div class="amount-value">{{ number_format((float) $receipt->amount, 2) }}</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Payment Information</div>
+
+        <table>
+            <tr>
+                <td class="label">Invoice No</td>
+                <td>{{ $receipt->invoice?->invoice_no ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Payment No</td>
+                <td>{{ $receipt->payment?->payment_no ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Payment Date</td>
+                <td>{{ $receipt->payment?->payment_date?->format('Y-m-d') ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Payment Method</td>
+                <td>{{ $receipt->payment_method }}</td>
+            </tr>
+            <tr>
+                <td class="label">Reference No</td>
+                <td>{{ $receipt->reference_no ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Invoice Total</td>
+                <td>{{ number_format((float) ($receipt->invoice?->total_amount ?? 0), 2) }}</td>
+            </tr>
+            <tr>
+                <td class="label">Invoice Paid</td>
+                <td>{{ number_format((float) ($receipt->invoice?->paid_amount ?? 0), 2) }}</td>
+            </tr>
+            <tr>
+                <td class="label">Balance Due</td>
+                <td>{{ number_format((float) ($receipt->invoice?->balance_due ?? 0), 2) }}</td>
+            </tr>
+        </table>
+    </div>
+
+    @if ($receipt->notes)
+    <div class="section">
+        <div class="section-title">Notes</div>
+        <div>{{ $receipt->notes }}</div>
+    </div>
+    @endif
+
+    <div class="footer">
+        Generated by SalesFlow on {{ now()->timezone('Asia/Bangkok')->format('Y-m-d H:i:s') }}
+    </div>
+</body>
+
+</html>

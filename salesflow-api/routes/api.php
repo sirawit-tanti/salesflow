@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoiceOverdueController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PdfController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\QuotationController;
 use App\Http\Controllers\Api\ReceiptController;
@@ -63,6 +64,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/quotations/{quotation}/convert-to-invoice', [QuotationController::class, 'convertToInvoice'])
         ->middleware('role:ADMIN,SALES');
 
+    Route::get('/quotations/{quotation}/pdf', [PdfController::class, 'quotation'])
+        ->middleware('role:ADMIN,SALES,MANAGER');
+
     Route::get('/quotations', [QuotationController::class, 'index'])
         ->middleware('role:ADMIN,SALES,MANAGER');
 
@@ -92,6 +96,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/invoices/mark-overdue', [InvoiceOverdueController::class, 'markOverdue'])
         ->middleware('role:ADMIN,ACCOUNTANT');
+    
+    Route::get('/invoices/{invoice}/pdf', [PdfController::class, 'invoice'])
+        ->middleware('role:ADMIN,ACCOUNTANT,MANAGER');
 
     Route::get('/invoices', [InvoiceController::class, 'index'])
         ->middleware('role:ADMIN,ACCOUNTANT,MANAGER');
@@ -102,6 +109,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])
         ->middleware('role:ADMIN,ACCOUNTANT');
     
+    Route::get('/receipts/{receipt}/pdf', [PdfController::class, 'receipt'])
+        ->middleware('role:ADMIN,ACCOUNTANT,MANAGER');
+
     Route::apiResource('receipts', ReceiptController::class)
         ->only(['index', 'show'])
         ->middleware('role:ADMIN,ACCOUNTANT,MANAGER');
