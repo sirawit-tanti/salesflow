@@ -15,6 +15,7 @@ import { InvoiceDetailPage } from "../features/invoices/InvoiceDetailPage";
 import { InvoiceListPage } from "../features/invoices/InvoiceListPage";
 import { ReceiptDetailPage } from "../features/receipts/ReceiptDetailPage";
 import { ReceiptListPage } from "../features/receipts/ReceiptListPage";
+import { ReportsPage } from "../features/reports/ReportsPage";
 
 export const router = createBrowserRouter([
   {
@@ -95,6 +96,10 @@ export const router = createBrowserRouter([
           {
             path: "/receipts/:receiptId",
             element: <ReceiptDetailPage />,
+          },
+          {
+            path: "/reports",
+            element: <ReportsPage />,
           },
         ],
       },

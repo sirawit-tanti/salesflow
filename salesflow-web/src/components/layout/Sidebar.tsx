@@ -38,6 +38,11 @@ const navItems: NavItem[] = [
     to: "/receipts",
     roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
   },
+  {
+    label: "Reports",
+    to: "/reports",
+    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
+  },
 ];
 
 export function Sidebar() {
@@ -77,10 +82,6 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
-
-      <div className="px-6 py-4 text-xs text-slate-400">
-        Next: Customers, Products, Quotations
-      </div>
     </aside>
   );
 }
