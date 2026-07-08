@@ -278,22 +278,53 @@ CSV files include UTF-8 BOM to support Thai text in Excel.
 
 ## Screenshots
 
-Recommended screenshot files:
+### Login
 
-```text
-screenshots/
-├── login.png
-├── dashboard.png
-├── customers.png
-├── products.png
-├── quotations.png
-├── quotation-detail.png
-├── invoices.png
-├── invoice-detail.png
-├── receipts.png
-├── reports.png
-└── audit-logs.png
-```
+![Login](screenshots/login.png)
+
+### Dashboard
+
+![Dashboard](screenshots/dashboard.png)
+
+### Customers
+
+![Customers](screenshots/customers.png)
+
+### Products and Services
+
+![Products](screenshots/products.png)
+
+### Quotations
+
+![Quotations](screenshots/quotations.png)
+
+### Quotation Detail
+
+![Quotation Detail](screenshots/quotation-detail.png)
+
+### Invoices
+
+![Invoices](screenshots/invoices.png)
+
+### Invoice Detail
+
+![Invoice Detail](screenshots/invoice-detail.png)
+
+### Receipts
+
+![Receipts](screenshots/receipts.png)
+
+### Receipt Detail
+
+![Receipt Detail](screenshots/receipt-detail.png)
+
+### Reports
+
+![Reports](screenshots/reports.png)
+
+### Audit Logs
+
+![Audit Logs](screenshots/audit-logs.png)
 
 ## Status
 
