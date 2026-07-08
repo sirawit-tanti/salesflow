@@ -332,9 +332,6 @@ Core portfolio features are completed.
 
 Planned improvements:
 
-- Quotation PDF export
-- Invoice PDF export
-- Receipt PDF export
 - Email quotation to customer
 - Advanced report charts
 - Deployment
