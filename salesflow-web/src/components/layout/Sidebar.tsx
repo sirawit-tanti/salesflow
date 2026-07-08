@@ -43,6 +43,11 @@ const navItems: NavItem[] = [
     to: "/reports",
     roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
   },
+  {
+    label: "Audit Logs",
+    to: "/audit-logs",
+    roles: ["ADMIN", "MANAGER"],
+  },
 ];
 
 export function Sidebar() {

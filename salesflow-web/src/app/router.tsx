@@ -16,6 +16,7 @@ import { InvoiceListPage } from "../features/invoices/InvoiceListPage";
 import { ReceiptDetailPage } from "../features/receipts/ReceiptDetailPage";
 import { ReceiptListPage } from "../features/receipts/ReceiptListPage";
 import { ReportsPage } from "../features/reports/ReportsPage";
+import { AuditLogListPage } from "../features/audit-logs/AuditLogListPage";
 
 export const router = createBrowserRouter([
   {
@@ -100,6 +101,10 @@ export const router = createBrowserRouter([
           {
             path: "/reports",
             element: <ReportsPage />,
+          },
+          {
+            path: "/audit-logs",
+            element: <AuditLogListPage />,
           },
         ],
       },
