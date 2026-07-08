@@ -17,6 +17,7 @@ import { ReceiptDetailPage } from "../features/receipts/ReceiptDetailPage";
 import { ReceiptListPage } from "../features/receipts/ReceiptListPage";
 import { ReportsPage } from "../features/reports/ReportsPage";
 import { AuditLogListPage } from "../features/audit-logs/AuditLogListPage";
+import { RoleRoute } from "../features/auth/RoleRoute";
 
 export const router = createBrowserRouter([
   {
@@ -99,12 +100,22 @@ export const router = createBrowserRouter([
             element: <ReceiptDetailPage />,
           },
           {
-            path: "/reports",
-            element: <ReportsPage />,
+            element: <RoleRoute roles={["ADMIN", "ACCOUNTANT", "MANAGER"]} />,
+            children: [
+              {
+                path: "/reports",
+                element: <ReportsPage />,
+              },
+            ],
           },
           {
-            path: "/audit-logs",
-            element: <AuditLogListPage />,
+            element: <RoleRoute roles={["ADMIN", "MANAGER"]} />,
+            children: [
+              {
+                path: "/audit-logs",
+                element: <AuditLogListPage />,
+              },
+            ],
           },
         ],
       },

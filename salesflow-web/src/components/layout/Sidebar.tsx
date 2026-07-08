@@ -1,6 +1,7 @@
 import { NavLink } from "react-router";
 import { useAuth } from "../../features/auth/AuthContext";
 import type { RoleName } from "../../features/auth/authType";
+import { hasRole } from "../../lib/permissions";
 
 interface NavItem {
   label: string;
@@ -12,36 +13,37 @@ const navItems: NavItem[] = [
   {
     label: "Dashboard",
     to: "/dashboard",
+    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
   },
   {
     label: "Customers",
     to: "/customers",
-    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
+    roles: ["ADMIN", "SALES"],
   },
   {
     label: "Products",
     to: "/products",
-    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
+    roles: ["ADMIN", "SALES"],
   },
   {
     label: "Quotations",
     to: "/quotations",
-    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
+    roles: ["ADMIN", "SALES", "MANAGER"],
   },
   {
     label: "Invoices",
     to: "/invoices",
-    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
+    roles: ["ADMIN", "ACCOUNTANT", "MANAGER"],
   },
   {
     label: "Receipts",
     to: "/receipts",
-    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
+    roles: ["ADMIN", "ACCOUNTANT", "MANAGER"],
   },
   {
     label: "Reports",
     to: "/reports",
-    roles: ["ADMIN", "SALES", "ACCOUNTANT", "MANAGER"],
+    roles: ["ADMIN", "ACCOUNTANT", "MANAGER"],
   },
   {
     label: "Audit Logs",
@@ -58,13 +60,7 @@ export function Sidebar() {
       return true;
     }
 
-    const roleName = user?.role?.name;
-
-    if (!roleName) {
-      return false;
-    }
-
-    return item.roles.includes(roleName);
+    return hasRole(user?.role?.name, item.roles);
   });
 
   return (

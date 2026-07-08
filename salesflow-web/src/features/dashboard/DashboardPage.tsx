@@ -7,6 +7,11 @@ import { formatStatus } from "../../lib/formatStatus";
 import { getDashboardSummaryApi } from "./dashboardApi";
 import type { DashboardSummaryResponse } from "./dashboardTypes";
 import { markOverdueInvoicesApi } from "../invoices/invoiceApi";
+import { useAuth } from "../auth/AuthContext";
+import {
+  canManageQuotations,
+  canMarkOverdueInvoices,
+} from "../../lib/permissions";
 
 interface StatCardProps {
   title: string;
@@ -41,6 +46,11 @@ function StatusCard({ label, value }: StatusCardProps) {
 }
 
 export function DashboardPage() {
+  const { user } = useAuth();
+
+  const canCreateQuotation = canManageQuotations(user?.role?.name);
+  const canMarkOverdue = canMarkOverdueInvoices(user?.role?.name);
+
   const [dashboard, setDashboard] = useState<DashboardSummaryResponse | null>(
     null,
   );
@@ -140,20 +150,25 @@ export function DashboardPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => void handleMarkOverdue()}
-            disabled={isActionLoading}
-            className="rounded-lg border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isActionLoading ? "Checking..." : "Mark Overdue"}
-          </button>
-          <Link
-            to="/quotations/create"
-            className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-          >
-            Create Quotation
-          </Link>
+          {canMarkOverdue && (
+            <button
+              type="button"
+              onClick={() => void handleMarkOverdue()}
+              disabled={isActionLoading}
+              className="rounded-lg border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isActionLoading ? "Checking..." : "Mark Overdue"}
+            </button>
+          )}
+
+          {canCreateQuotation && (
+            <Link
+              to="/quotations/create"
+              className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              Create Quotation
+            </Link>
+          )}
 
           <Link
             to="/invoices"

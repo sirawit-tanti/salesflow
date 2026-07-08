@@ -7,6 +7,8 @@ import { formatStatus } from "../../lib/formatStatus";
 import type { PaginationMeta } from "../../types/pagination";
 import { deleteQuotationApi, getQuotationsApi } from "./quotationApi";
 import type { Quotation, QuotationStatus } from "./quotationTypes";
+import { useAuth } from "../auth/AuthContext";
+import { canManageQuotations } from "../../lib/permissions";
 
 const quotationStatuses: Array<QuotationStatus | ""> = [
   "",
@@ -43,6 +45,9 @@ function getStatusClass(status: QuotationStatus): string {
 }
 
 export function QuotationListPage() {
+  const { user } = useAuth();
+  const canManage = canManageQuotations(user?.role?.name);
+
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [searchInput, setSearchInput] = useState("");
@@ -138,12 +143,14 @@ export function QuotationListPage() {
           </p>
         </div>
 
-        <Link
-          to="/quotations/create"
-          className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-        >
-          Create Quotation
-        </Link>
+        {canManage && (
+          <Link
+            to="/quotations/create"
+            className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+          >
+            Create Quotation
+          </Link>
+        )}
       </div>
 
       {errorMessage && (
@@ -310,20 +317,24 @@ export function QuotationListPage() {
 
                         {quotation.status === "DRAFT" && (
                           <>
-                            <Link
-                              to={`/quotations/${quotation.id}/edit`}
-                              className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                            >
-                              Edit
-                            </Link>
+                            {canManage && (
+                              <Link
+                                to={`/quotations/${quotation.id}/edit`}
+                                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                              >
+                                Edit
+                              </Link>
+                            )}
 
-                            <button
-                              type="button"
-                              onClick={() => void handleDelete(quotation)}
-                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50"
-                            >
-                              Delete
-                            </button>
+                            {canManage && (
+                              <button
+                                type="button"
+                                onClick={() => void handleDelete(quotation)}
+                                className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50"
+                              >
+                                Delete
+                              </button>
+                            )}
                           </>
                         )}
                       </div>

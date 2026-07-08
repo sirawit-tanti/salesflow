@@ -12,6 +12,8 @@ import {
   sendQuotationApi,
 } from "./quotationApi";
 import type { Quotation } from "./quotationTypes";
+import { useAuth } from "../auth/AuthContext";
+import { canConvertQuotation, canSendQuotation } from "../../lib/permissions";
 
 function getStatusClass(status: string): string {
   if (status === "DRAFT") {
@@ -38,6 +40,11 @@ function getStatusClass(status: string): string {
 }
 
 export function QuotationDetailPage() {
+  const { user } = useAuth();
+
+  const canSend = canSendQuotation(user?.role?.name);
+  const canConvert = canConvertQuotation(user?.role?.name);
+
   const { quotationId } = useParams();
   const navigate = useNavigate();
 
@@ -232,7 +239,7 @@ export function QuotationDetailPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {quotation.status === "DRAFT" && (
+          {quotation.status === "DRAFT" && canSend && (
             <>
               <Link
                 to={`/quotations/${quotation.id}/edit`}
@@ -252,7 +259,7 @@ export function QuotationDetailPage() {
             </>
           )}
 
-          {quotation.status === "SENT" && (
+          {quotation.status === "SENT" && canSend && (
             <>
               <button
                 type="button"
@@ -274,7 +281,7 @@ export function QuotationDetailPage() {
             </>
           )}
 
-          {quotation.status === "ACCEPTED" && (
+          {quotation.status === "ACCEPTED" && canConvert && (
             <button
               type="button"
               onClick={() => void handleConvertToInvoice()}

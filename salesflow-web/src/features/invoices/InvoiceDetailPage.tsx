@@ -9,6 +9,8 @@ import { deletePaymentApi } from "../payments/paymentApi";
 import { getInvoiceApi } from "./invoiceApi";
 import type { Invoice, InvoiceStatus } from "./invoiceTypes";
 import type { Payment } from "../payments/paymentTypes";
+import { useAuth } from "../auth/AuthContext";
+import { canDeletePayment, canRecordPayment } from "../../lib/permissions";
 
 function getStatusClass(status: InvoiceStatus): string {
   if (status === "UNPAID") {
@@ -31,6 +33,11 @@ function getStatusClass(status: InvoiceStatus): string {
 }
 
 export function InvoiceDetailPage() {
+  const { user } = useAuth();
+
+  const canRecord = canRecordPayment(user?.role?.name);
+  const canDelete = canDeletePayment(user?.role?.name);
+
   const { invoiceId } = useParams();
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -42,9 +49,10 @@ export function InvoiceDetailPage() {
   const [successMessage, setSuccessMessage] = useState("");
 
   const canReceivePayment =
-    invoice?.status === "UNPAID" ||
-    invoice?.status === "PARTIALLY_PAID" ||
-    invoice?.status === "OVERDUE";
+    canRecord &&
+    (invoice?.status === "UNPAID" ||
+      invoice?.status === "PARTIALLY_PAID" ||
+      invoice?.status === "OVERDUE");
 
   useEffect(() => {
     if (!invoiceId) {
@@ -400,14 +408,18 @@ export function InvoiceDetailPage() {
                               </Link>
                             )}
 
-                            <button
-                              type="button"
-                              onClick={() => void handleDeletePayment(payment)}
-                              disabled={isActionLoading}
-                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              Delete
-                            </button>
+                            {canDelete && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void handleDeletePayment(payment)
+                                }
+                                disabled={isActionLoading}
+                                className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+                              >
+                                Delete
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

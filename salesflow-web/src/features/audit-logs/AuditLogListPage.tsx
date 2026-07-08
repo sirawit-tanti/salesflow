@@ -1,6 +1,5 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { formatDate } from "../../lib/formatDate";
 import { formatStatus } from "../../lib/formatStatus";
 import type { PaginationMeta } from "../../types/pagination";
 import { getAuditLogsApi } from "./auditLogApi";

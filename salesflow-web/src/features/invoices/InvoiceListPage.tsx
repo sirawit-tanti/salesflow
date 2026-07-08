@@ -11,6 +11,11 @@ import {
   markOverdueInvoicesApi,
 } from "./invoiceApi";
 import type { Invoice, InvoiceStatus } from "./invoiceTypes";
+import { useAuth } from "../auth/AuthContext";
+import {
+  canManageInvoices,
+  canMarkOverdueInvoices,
+} from "../../lib/permissions";
 
 const invoiceStatuses: Array<InvoiceStatus | ""> = [
   "",
@@ -42,6 +47,11 @@ function getStatusClass(status: InvoiceStatus): string {
 }
 
 export function InvoiceListPage() {
+  const { user } = useAuth();
+
+  const canManage = canManageInvoices(user?.role?.name);
+  const canMarkOverdue = canMarkOverdueInvoices(user?.role?.name);
+
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [searchInput, setSearchInput] = useState("");
@@ -171,14 +181,16 @@ export function InvoiceListPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => void handleMarkOverdue()}
-          disabled={isActionLoading}
-          className="inline-flex items-center justify-center rounded-lg border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {isActionLoading ? "Checking..." : "Mark Overdue"}
-        </button>
+        {canMarkOverdue && (
+          <button
+            type="button"
+            onClick={() => void handleMarkOverdue()}
+            disabled={isActionLoading}
+            className="inline-flex items-center justify-center rounded-lg border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {isActionLoading ? "Checking..." : "Mark Overdue"}
+          </button>
+        )}
       </div>
 
       {errorMessage && (
@@ -371,7 +383,7 @@ export function InvoiceListPage() {
                           View
                         </Link>
 
-                        {invoice.status === "UNPAID" && (
+                        {invoice.status === "UNPAID" && canManage && (
                           <button
                             type="button"
                             onClick={() => void handleDelete(invoice)}
